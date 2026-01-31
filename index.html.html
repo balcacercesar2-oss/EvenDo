@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvenDo | Eventos Premium RD</title>
+    
+    <!-- Librerías necesarias -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"> 
+    
+    <style>
+    :root { 
+        --primary: #10B981; --primary-hover: #059669;
+        --dark: #0f172a; --text-gray: #64748b;
+        --bg: #f8fafc; --white: #ffffff;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--dark); overflow-x: hidden; scroll-behavior: smooth; }
+
+    /* Loader */
+    .loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--white); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s, visibility 0.5s; display: none; }
+    .loader.hidden { opacity: 0; visibility: hidden; }
+    .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Navbar */
+    .navbar { 
+        display: flex; justify-content: space-between; align-items: center; 
+        padding: 0 8%; height: 80px; background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+    .logo { font-size: 28px; font-weight: 800; text-decoration: none; color: var(--dark); }
+    .logo span { color: var(--primary); }
+    .hamburger { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--dark); }
+    .nav-links { display: flex; gap: 30px; align-items: center; }
+    .nav-links a { text-decoration: none; color: var(--dark); font-weight: 500; transition: 0.3s; cursor: pointer; }
+    .nav-links a:hover { color: var(--primary); }
+
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-content {
+        display: none; position: absolute; background-color: var(--white);
+        min-width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        border-radius: 12px; z-index: 1; top: 100%; overflow: hidden;
+    }
+    .dropdown-content a { color: var(--dark); padding: 12px 16px; display: block; font-size: 14px; text-decoration: none; }
+    .dropdown:hover .dropdown-content { display: block; }
+
+    /* Slider */
+    .slider-wrapper { position: relative; height: 500px; margin: 40px 8%; overflow: hidden; border-radius: 30px; background: var(--white); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+    .slide { display: none; height: 100%; grid-template-columns: 1fr 1fr; align-items: center; animation: fadeIn 0.8s ease-in-out; }
+    .slide.active { display: grid; }
+    .slide-img { height: 100%; background-size: cover; background-position: center; }
+    .slide-content { padding: 60px; }
+    .slide-content h2 { font-size: 42px; margin-bottom: 20px; }
+    .slide-content p { color: var(--text-gray); font-size: 18px; line-height: 1.6; }
+
+    .prev, .next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        font-size: 18px;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+        z-index: 10;
+    }
+    .prev:hover, .next:hover {
+        background: rgba(0,0,0,0.8);
+    }
+    .prev { left: 10px; }
+    .next { right: 10px; }
+
+    .dots {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+    }
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.5);
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    .dot.active {
+        background: var(--primary);
+    }
+
+    /* Responsive Slider */
+    @media (max-width: 768px) {
+        .navbar { padding: 0 4%; }
+        .hamburger { display: block; }
+        .nav-links { display: none; position: absolute; top: 80px; left: 0; width: 100%; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); flex-direction: column; gap: 20px; padding: 20px 4%; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .nav-links.active { display: flex; }
+        .dropdown { width: 100%; }
+        .dropdown-content { position: static; display: none; background: transparent; box-shadow: none; border-radius: 0; }
+        .dropdown.active .dropdown-content { display: block; }
+        .slider-wrapper { height: auto; margin: 20px 4%; }
+        .slide { display: none; height: 100%; grid-template-columns: 1fr; align-items: center; animation: fadeIn 0.8s ease-in-out; }
+        .slide-img { height: 250px; }
+        .slide-content { padding: 20px; text-align: center; }
+        .slide-content h2 { font-size: 28px; }
+        .slide-content p { font-size: 16px; }
+        .slide.active { display: grid !important; }
+        .prev, .next { width: 30px; height: 30px; font-size: 14px; }
+        .dots { bottom: 10px; }
+        .dot { width: 8px; height: 8px; }
+        .galeria-section { padding: 60px 4%; }
+        .galeria-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .footer { padding: 30px 4%; }
+        .footer-content { grid-template-columns: 1fr; gap: 20px; }
+        .footer-section h3 { font-size: 20px; }
+        .footer-section h4 { font-size: 16px; }
+        .social-links { justify-content: center; }
+        #footerForm .form-row { flex-direction: column; }
+        #footerForm textarea { flex: none; height: 80px; }
+    }
+
+    /* Grid Servicios */
+    #seccion-servicios { display: none; padding-bottom: 80px; }
+    .grid-servicios { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; padding: 0 8%; }
+    .card { background: var(--white); padding: 35px; border-radius: 25px; border: 1px solid #eef2f6; transition: 0.4s; text-align: center; display: none; }
+    .card.visible { display: block; animation: fadeIn 0.5s ease; }
+    .card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 20px 30px rgba(0,0,0,0.05); }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }
+    .badge-normal { background: #f1f5f9; color: #475569; }
+    .badge-vip { background: #dcfce7; color: #166534; }
+    .badge-premium { background: #fef3c7; color: #92400e; }
+    .precio { font-size: 28px; font-weight: 800; margin: 15px 0; color: var(--dark); }
+    .btn-buy { width: 100%; padding: 14px; background: var(--dark); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .btn-buy:hover { background: var(--primary); }
+
+    /* Galería */
+    .galeria-section { padding: 80px 8%; text-align: center; }
+    .galeria-section h2 { font-size: 36px; margin-bottom: 40px; color: var(--dark); }
+    .galeria-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .galeria-item { position: relative; overflow: hidden; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: transform 0.3s; }
+    .galeria-item:hover { cursor: pointer; transform: scale(1.05); }
+    .galeria-item img { cursor: pointer; width: 100%; height: 200px; object-fit: cover; transition: transform 0.3s, filter 0.3s; }
+    .galeria-item:hover img { transform: scale(1.1); filter: brightness(0.5); }
+    .galeria-item .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; color: white; padding: 20px; box-sizing: border-box; }
+    .galeria-item:hover .overlay { opacity: 1; }
+    .galeria-item .overlay h3 { margin: 0 0 10px 0; font-size: 20px; }
+    .galeria-item .overlay p { margin: 0; font-size: 14px; text-align: center; }
+
+    /* Modal y Formulario de Pago */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+    .modal { background: var(--white); padding: 30px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .modal h2 { color: var(--primary); margin-top: 0; font-size: 24px; text-align: center; }
+    .modal p { font-size: 14px; color: var(--text-gray); margin-bottom: 20px; text-align: center; }
+    .modal label { display: block; font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 8px; }
+    .modal input { width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-size: 16px; transition: border-color 0.3s; }
+    .modal input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+    .modal input[type="date"] { cursor: pointer; }
+    .modal .card-fields { display: flex; gap: 15px; }
+    .modal .card-fields > div { flex: 1; }
+    .modal button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 16px; margin-top: 10px; }
+    .modal .btn-buy { background: var(--primary); color: white; }
+    .modal .btn-buy:hover { background: var(--primary-hover); }
+    .modal .btn-cancel { background: transparent; color: var(--text-gray); border: 1px solid #e2e8f0; }
+    .modal .btn-cancel:hover { background: #f8fafc; }
+    
+
+    /* Footer */
+    .footer { background: var(--dark); color: white; padding: 40px 8% 20px; margin-top: 40px; }
+    .footer-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-bottom: 20px; }
+    .footer-section h3, .footer-section h4 { margin-bottom: 15px; color: var(--primary); }
+    .footer-section h3 { font-size: 24px; }
+    .footer-section h4 { font-size: 18px; }
+    .footer-section p { margin: 5px 0; line-height: 1.6; }
+    .footer-section ul { list-style: none; padding: 0; }
+    .footer-section ul li { margin: 8px 0; }
+    .footer-section ul li a { color: white; text-decoration: none; transition: 0.3s; }
+    .footer-section ul li a:hover { color: var(--primary); }
+    .social-links { display: flex; gap: 15px; }
+    .social-link { color: white; text-decoration: none; padding: 8px 12px; border: 1px solid var(--primary); border-radius: 5px; transition: 0.3s; }
+    .social-link:hover { padding-top: 10px;  }
+    .social-link:hover { background: var(--primary); }
+    .footer-bottom { border-top: 1px solid #444; padding-top: 20px; text-align: center; font-size: 14px; color: #ccc; }
+
+    /* Footer Form */
+    #footerForm { display: flex; flex-direction: column; gap: 10px; }
+    #footerForm .form-row { display: flex; gap: 10px; }
+    #footerForm input { flex: 1; }
+    #footerForm textarea { flex: 2; }
+    #footerForm button { align-self: flex-start; }
+    #footerForm input, #footerForm textarea { padding: 8px; border: 1px solid #555; border-radius: 5px; background: transparent; color: white; font-family: inherit; }
+    #footerForm input::placeholder, #footerForm textarea::placeholder { color: #ccc; }
+    .btn-footer-send { padding: 8px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+    .btn-footer-send:hover { background: var(--primary-hover); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+</head>
+<body>
+
+    <div id="loader" class="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">Even<span>Do</span></a>
+        <button class="hamburger" onclick="toggleMenu()">☰</button>
+        <div class="nav-links">
+            <a onclick="scrollToInicio()">Inicio</a>
+            <div class="dropdown">
+                <a onclick="toggleDropdown()">Servicios ▾</a>
+                <div class="dropdown-content">
+                    <a onclick="filtrar('bodas')">Bodas</a>
+                    <a onclick="filtrar('cumple')">Cumpleaños</a>
+                    <a onclick="filtrar('night')">Fiesta Nocturna</a>
+                </div>
+            </div>
+            <a onclick="scrollToGaleria()">Galería</a>
+            <a onclick="scrollToFooter()">Contacto</a>
+        </div>
+    </nav>
+<div id="Inicio"></div>
+    <div class="slider-wrapper">
+        <div class="slide active">
+            <div class="slide-img" style="background-image: url('2.jpg')"></div>
+            <div class="slide-content">
+                <h2>Bodas de Ensueño</h2>
+                <p>Planificamos cada detalle para que tu gran día sea perfecto en RD.</p>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="slide-img" style="background-image: url('1.jpg')"></div>
+            <div class="slide-content">
+                <h2>Celebraciones Especiales</h2>
+                <p>Ambientes temáticos que reflejan tu esencia.</p>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="slide-img" style="background-image: url('3.jpg')"></div>
+            <div class="slide-content">
+                <h2>Nightlife & Neon</h2>
+                <p>Llevamos la discoteca a donde tú estés.</p>
+            </div>
+        </div>
+        <button class="prev" onclick="changeSlide(-1)">❮</button>
+        <button class="next" onclick="changeSlide(1)">❯</button>
+        <div class="dots" id="dotContainer"></div>
+    </div>
+
+    <div id="seccion-servicios">
+        <h2 id="titulo-categoria" style="text-align:center; font-size: 32px; margin: 40px 0;"></h2>
+        <div class="grid-servicios">
+            <!-- BODAS -->
+            <div class="card" data-cat="bodas"><span class="badge badge-normal">Normal</span><h3>Boda Civil</h3><p>Decoración básica y brindis.</p><div class="precio">RD$ 45,000</div><button class="btn-buy" onclick="abrirCompra('Boda Normal', 45000)">Adquirir</button></div>
+            <div class="card" data-cat="bodas" style="border:2px solid var(--primary)"><span class="badge badge-vip">VIP</span><h3>Boda de Gala</h3><p>Buffet, DJ y Foto.</p><div class="precio">RD$ 95,000</div><button class="btn-buy" onclick="abrirCompra('Boda VIP', 95000)">Adquirir</button></div>
+            <div class="card" data-cat="bodas"><span class="badge badge-premium">Premium</span><h3>Boda Royal</h3><p>Wedding Planner y Open Bar.</p><div class="precio">RD$ 180,000</div><button class="btn-buy" onclick="abrirCompra('Boda Premium', 180000)">Adquirir</button></div>
+            <!-- CUMPLES -->
+            <div class="card" data-cat="cumple"><span class="badge badge-normal">Normal</span><h3>Fiesta Kids</h3><p>Inflables y decoración.</p><div class="precio">RD$ 20,000</div><button class="btn-buy" onclick="abrirCompra('Cumple Normal', 20000)">Adquirir</button></div>
+            <div class="card" data-cat="cumple"><span class="badge badge-vip">VIP</span><h3>Cumple VIP</h3><p>Candy Bar y Animación.</p><div class="precio">RD$ 45,000</div><button class="btn-buy" onclick="abrirCompra('Cumple VIP', 45000)">Adquirir</button></div>
+            <div class="card" data-cat="cumple"><span class="badge badge-premium">Premium</span><h3>Gala 15/50</h3><p>Cena y Orquesta.</p><div class="precio">RD$ 85,000</div><button class="btn-buy" onclick="abrirCompra('Cumple Premium', 85000)">Adquirir</button></div>
+            <!-- NIGHT -->
+            <div class="card" data-cat="night"><span class="badge badge-normal">Normal</span><h3>Neon Party</h3><p>Luces UV y Sonido.</p><div class="precio">RD$ 15,000</div><button class="btn-buy" onclick="abrirCompra('Night Normal', 15000)">Adquirir</button></div>
+            <div class="card" data-cat="night"><span class="badge badge-vip">VIP</span><h3>Club VIP</h3><p>Robot LED y Bartender.</p><div class="precio">RD$ 35,000</div><button class="btn-buy" onclick="abrirCompra('Night VIP', 35000)">Adquirir</button></div>
+            <div class="card" data-cat="night"><span class="badge badge-premium">Premium</span><h3>Platinum Night</h3><p>CO2 y Bar Premium.</p><div class="precio">RD$ 70,000</div><button class="btn-buy" onclick="abrirCompra('Night Premium', 70000)">Adquirir</button></div>
+        </div>
+    </div>
+
+    <div id="galeria" class="galeria-section">
+        <h2>Galería de Eventos</h2>
+        <div class="galeria-grid">
+            <div class="galeria-item">
+                <img src="b.jpeg" alt="Boda Elegante">
+                <div class="overlay">
+                    <h3>Boda Elegante</h3>
+                    <p>Ceremonia y recepción con decoración floral y catering premium.</p>
+                </div>
+            </div>
+            <div class="galeria-item">
+                <img src="b2.jpg" alt="Boda Romántica">
+                <div class="overlay">
+                    <h3>Boda Romántica</h3>
+                    <p>Ambiente íntimo con velas y música en vivo.</p>
+                </div>
+            </div>
+            <div class="galeria-item">
+                <img src="c.png" alt="Cumpleaños Temático">
+                <div class="overlay">
+                    <h3>Cumpleaños Temático</h3>
+                    <p>Fiesta con decoraciones personalizadas y animación.</p>
+                </div>
+            </div>
+            <div class="galeria-item">
+                <img src="cf.jpg" alt="Cumpleaños Familiar">
+                <div class="overlay">
+                    <h3>Cumpleaños Familiar</h3>
+                    <p>Reunión con juegos y comida para toda la familia.</p>
+                </div>
+            </div>
+            <div class="galeria-item">
+                <img src="f.jpg" alt="Fiesta Nocturna">
+                <div class="overlay">
+                    <h3>Fiesta Nocturna</h3>
+                    <p>Iluminación LED y sonido profesional para la noche perfecta.</p>
+                </div>
+            </div>
+            <div class="galeria-item">
+                <img src="ce.jpg" alt="Club Experience">
+                <div class="overlay">
+                    <h3>Club Experience</h3>
+                    <p>Transforma tu espacio en un club con efectos especiales.</p>
+                </div>
+            </div>
+            <div class="galeria-item">
+                <img src="ec.jpg" alt="Evento Corporativo">
+                <div class="overlay">
+                    <h3>Evento Corporativo</h3>
+                    <p>Conferencias y eventos empresariales con equipo audiovisual.</p>
+                </div>
+            </div>
+            <div class="galeria-item">
+                <img src="nv.jpg" alt="Celebración Especial">
+                <div class="overlay">
+                    <h3>Celebración Especial</h3>
+                    <p>Aniversarios y conmemoraciones con toques únicos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalCompra" class="overlay">
+    <div class="modal">
+        <h2 id="modalTitle"></h2>
+        <p>Se requiere un pago del <b>20% de inicial</b> para procesar la solicitud.</p>
+        
+        <form id="formCompra" action="https://formsubmit.co/tomibalca@gmail.com" method="POST">
+            <!-- Configuraciones ocultas de FormSubmit -->
+            <input type="hidden" name="_subject" value="Nueva Solicitud de Reserva - EvenDo">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_next" value="">
+            
+            <input type="hidden" id="event_type" name="Plan_Seleccionado">
+            <input type="hidden" id="total_amount" name="Monto_Inicial_RD">
+            
+            <label>Nombre del Solicitante</label>
+            <input type="text" id="user_name" required placeholder="Nombre completo" name="Nombre_Cliente">
+            
+            <label>Correo Electrónico</label>
+            <input type="email" id="user_email" required placeholder="tu@correo.com" name="Email_Cliente">
+
+            <label>Teléfono</label>
+            <input type="tel" id="user_phone" required placeholder="809-000-0000" name="Telefono">
+            
+            <label>Lugar del Evento</label>
+            <input type="text" id="event_place" required placeholder="Ciudad, local o dirección" name="Lugar_Evento">
+            
+            <label>Fecha del Evento</label>
+            <input type="date" id="event_date" required name="Fecha_Evento">
+
+            <!-- Campos de Tarjeta Simulados -->
+            <label>Número de Tarjeta</label>
+            <input type="text" maxlength="19" placeholder="0000 0000 0000 0000" required name="Numero_Tarjeta">
+            
+            <div class="card-fields">
+                <div>
+                    <label>Expiración</label>
+                    <input type="text" placeholder="MM/AA" maxlength="5" required name="Expiracion">
+                </div>
+                <div>
+                    <label>CVC</label>
+                    <input type="text" placeholder="123" maxlength="3" required name="CVC">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-buy" id="btnEnviar">Verificar y Pagar Inicial</button>
+            <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+        </form>
+    </div>
+</div>
+
+    <!-- Footer -->
+    <footer id="footer" class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Even<span>Do</span></h3>
+                <p>Eventos Premium en República Dominicana. Hacemos realidad tus sueños con planificación impecable y atención personalizada.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Servicios</h4>
+                <ul>
+                    <li><a href="#" onclick="filtrar('bodas')">Bodas</a></li>
+                    <li><a href="#" onclick="filtrar('cumple')">Cumpleaños</a></li>
+                    <li><a href="#" onclick="filtrar('night')">Fiestas Nocturnas</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Contacto</h4>
+                <p style="color: #0bdb96; cursor: pointer;"><i class="icon-phone"></i>+1 (809) 123-4567</p>
+                <p><i class="icon-email"></i> EvenDo@gmail.com</p>
+                <p><i class="icon-location"></i> Santiago, Republica Dominicana</p>
+            </div>
+            <div class="footer-section">
+                <h4>Síguenos</h4>
+                <div class="social-links">
+                    <a href="#" class="social-link">Facebook</a>
+                    <a href="#" class="social-link">Instagram</a>
+                    <a href="#" class="social-link">Twitter</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Envíanos un Mensaje</h4>
+                <form id="footerForm">
+                    <div class="form-row">
+                        <input type="email" id="footer_email" placeholder="Tu Gmail" required>
+                        <textarea id="footer_message" placeholder="Enviar mensaje" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-footer-send">Enviar</button>
+                </form>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 EvenDo. Todos los derechos reservados. | Diseñado con ❤️ para eventos inolvidables.</p>
+        </div>
+    </footer>
+
+    <script>
+let currentSlide = 0;
+let slides;
+
+function updateSlides() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+}
+
+function updateDots() {
+    document.querySelectorAll('.dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentSlide);
+    });
+}
+
+function changeSlide(n) { 
+    currentSlide = (currentSlide + n + slides.length) % slides.length; 
+    updateSlides(); 
+    updateDots();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    slides = document.querySelectorAll('.slide');
+
+    // Crear dots
+    const dotContainer = document.getElementById('dotContainer');
+    slides.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        if (i === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => {
+            currentSlide = i;
+            updateSlides();
+            updateDots();
+        });
+        dotContainer.appendChild(dot);
+    });
+
+    // Auto-slide cada 6 segundos
+    setInterval(() => changeSlide(1), 6000);
+});
+
+// Función para toggle menú hamburguesa
+function toggleMenu() {
+    document.querySelector('.nav-links').classList.toggle('active');
+}
+
+// Función para toggle dropdown
+function toggleDropdown() {
+    if (window.innerWidth <= 768) {
+        document.querySelector('.dropdown').classList.toggle('active');
+    }
+}
+
+// Funciones del modal
+function abrirCompra(plan, precioTotal) {
+    // Mostrar loader brevemente
+    document.getElementById('loader').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('loader').style.display = 'none';
+    }, 200);
+
+    // Cálculo del 20%
+    const inicial = precioTotal * 0.20;
+    document.getElementById('modalTitle').innerText = "Inicial: RD$ " + inicial.toLocaleString();
+    document.getElementById('event_type').value = plan;
+    document.getElementById('total_amount').value = inicial;
+    document.getElementById('modalCompra').style.display = 'flex';
+}
+
+function cerrarModal() { document.getElementById('modalCompra').style.display = 'none'; }
+
+document.getElementById('formCompra').onsubmit = function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnEnviar');
+    btn.innerText = "Enviando Solicitud...";
+    btn.disabled = true;
+
+    const formData = new FormData(this);
+
+    fetch(this.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            cerrarModal();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Solicitud Enviada!',
+                text: 'Tu solicitud ha sido enviada. Recibirás una confirmación por email.',
+                showConfirmButton: false,
+                timer: 3000,
+                iconColor: '#10B981'
+            });
+            btn.innerText = "Verificar y Pagar Inicial";
+            btn.disabled = false;
+            this.reset();
+        } else {
+            throw new Error('Error en el envío');
+        }
+    })
+    .catch(error => {
+        Swal.fire('Error', 'No se pudo enviar la solicitud. Inténtalo de nuevo.', 'error');
+        btn.innerText = "Verificar y Pagar Inicial";
+        btn.disabled = false;
+    });
+};
+
+// Función para scroll a secciones
+function scrollToInicio() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scrollToGaleria() {
+    window.scrollTo({ top: document.getElementById('galeria').offsetTop - 100, behavior: 'smooth' });
+}
+
+function scrollToFooter() {
+    window.scrollTo({ top: document.getElementById('footer').offsetTop - 100, behavior: 'smooth' });
+}
+
+// Lógica de Filtrado
+function filtrar(categoria) {
+    document.getElementById('seccion-servicios').style.display = 'block';
+    const titulos = { 'bodas': 'Paquetes de Bodas', 'cumple': 'Paquetes de Cumpleaños', 'night': 'Paquetes Nightlife' };
+    document.getElementById('titulo-categoria').innerText = titulos[categoria];
+    document.querySelectorAll('.card').forEach(card => card.classList.toggle('visible', card.getAttribute('data-cat') === categoria));
+    window.scrollTo({ top: document.getElementById('seccion-servicios').offsetTop - 100, behavior: 'smooth' });
+}
+
+// Formulario del Footer
+document.getElementById('footerForm').onsubmit = function(e) {
+    e.preventDefault();
+    const btn = document.querySelector('.btn-footer-send');
+    btn.innerText = "Enviando...";
+    btn.disabled = true;
+
+    // Simulación de envío
+    setTimeout(() => {
+        Swal.fire({
+            icon: 'success',
+            title: '¡Mensaje Enviado!',
+            text: 'Gracias por tu mensaje. Te responderemos pronto.',
+            showConfirmButton: false,
+            timer: 3000,
+            iconColor: '#10B981'
+        });
+        btn.innerText = "Enviar";
+        btn.disabled = false;
+        this.reset();
+    }, 2000);
+};
+    </script>
+</body>
+</html>
